@@ -15,6 +15,8 @@ class CategorySeeder extends Seeder
             ['name' => 'Books'],
             ['name' => 'Home & Garden'],
             ['name' => 'Sports'],
+            ['name' => 'Toys & Games'],
+            ['name' => 'Mobile Phones'],
         ];
 
         foreach ($categories as $category) {
