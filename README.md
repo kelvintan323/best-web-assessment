@@ -51,10 +51,10 @@ This starts 4 containers:
 
 | Container | Port | Description |
 |-----------|------|-------------|
-| `laravel-app` | 9000 (internal) | PHP-FPM application |
-| `laravel-nginx` | **8000** | Nginx web server |
-| `laravel-mysql` | **3306** | MySQL database |
-| `laravel-node` | - | Frontend build (runs once) |
+| `php-service` | 9000 (internal) | PHP-FPM application |
+| `nginx-service` | **8000** | Nginx web server |
+| `mysql-service` | **3306** | MySQL database |
+| `frontend` | - | Frontend build (only runs once) |
 
 ### Step 5: Install Dependencies & Setup Database
 
