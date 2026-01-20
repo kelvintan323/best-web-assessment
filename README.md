@@ -29,7 +29,7 @@ cd best-web-assessment
 ### Step 2: Setup Environment File
 
 ```bash
-cp .env.example .env
+cp .env.docker .env
 ```
 
 The default configuration uses:

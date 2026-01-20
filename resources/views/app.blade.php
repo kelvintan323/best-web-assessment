@@ -4,11 +4,90 @@
   <meta charset="UTF-8" />
   <link rel="icon" href="/favicon.ico" />
   <meta name="robots" content="noindex, nofollow" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vuexy - Vuejs Admin Dashboard Template</title>
-  <link rel="stylesheet" type="text/css" href="/loader.css" />
-  <script type="module" crossorigin src="/assets/index-BSNMDlwi.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-WvVHPjAP.css">
+  <title>Best Web Test</title>
+  <style>
+    :root {
+      --initial-loader-bg: #FFFFFF;
+      --initial-loader-color: #1a96fe;
+    }
+
+    #loading-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--initial-loader-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loading-logo {
+      margin-bottom: 24px;
+    }
+
+    .loading {
+      width: 80px;
+      height: 80px;
+      position: relative;
+    }
+
+    .effects {
+      border-radius: 50%;
+      position: absolute;
+      border: 3px solid transparent;
+      border-top-color: var(--initial-loader-color);
+    }
+
+    .effect-1 {
+      width: 100%;
+      height: 100%;
+      animation: rotate 1s linear infinite;
+    }
+
+    .effect-2 {
+      width: 75%;
+      height: 75%;
+      top: 12.5%;
+      left: 12.5%;
+      animation: rotate-reverse 1s linear infinite;
+      border-top-color: transparent;
+      border-left-color: var(--initial-loader-color);
+    }
+
+    .effect-3 {
+      width: 50%;
+      height: 50%;
+      top: 25%;
+      left: 25%;
+      animation: rotate 1s linear infinite;
+    }
+
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes rotate-reverse {
+      from {
+        transform: rotate(360deg);
+      }
+      to {
+        transform: rotate(0deg);
+      }
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-Dxfgb5C_.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-D2J6ws65.css">
 </head>
 
 <body>
@@ -42,7 +121,7 @@
   </div>
   <script>
     const loaderColor = localStorage.getItem('vuexy-initial-loader-bg') || '#FFFFFF'
-    const primaryColor = localStorage.getItem('vuexy-initial-loader-color') || '#7367F0'
+    const primaryColor = localStorage.getItem('vuexy-initial-loader-color') || '#1a96fe'
 
     if (loaderColor)
       document.documentElement.style.setProperty('--initial-loader-bg', loaderColor)
