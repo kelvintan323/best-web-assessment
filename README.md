@@ -8,6 +8,7 @@ A Laravel + Vue.js application with Docker support.
 - **Frontend**: Vue.js 3 + Vuetify + Vite
 - **Database**: MySQL 8.0
 - **Server**: Nginx
+- **API Docs**: L5-Swagger (OpenAPI 3.0)
 
 ## Prerequisites
 
@@ -73,6 +74,7 @@ This command will:
 Open your browser and visit:
 
 - **Application**: http://localhost:8000
+- **Swagger API Docs**: http://localhost:8000/api/documentation
 
 ## Available Commands
 
@@ -90,6 +92,7 @@ Open your browser and visit:
 | `make logs` | View container logs |
 | `make clear` | Clear Laravel caches |
 | `make test` | Run tests |
+| `make swagger` | Generate Swagger documentation |
 
 ## Development Workflow
 
@@ -155,6 +158,173 @@ make build
 make up
 make install
 ```
+
+## Swagger Documentation
+
+This project uses [L5-Swagger](https://github.com/DarkaOnLine/L5-Swagger) with **PHP 8 Attributes** to generate OpenAPI 3.0 documentation.
+
+### Access
+
+- **URL**: http://localhost:8000/api/documentation
+
+### Regenerate Docs
+
+After modifying API endpoints or adding new ones:
+
+```bash
+make swagger
+# or
+docker-compose exec app php artisan l5-swagger:generate
+```
+
+### API Tags
+
+The API is organized into the following tags:
+
+| Tag | Description |
+|-----|-------------|
+| Authentication | Admin login/logout endpoints |
+| Products | Product CRUD operations |
+| Categories | Category listing |
+
+### Authentication
+
+All protected endpoints use **Bearer Token** authentication. After logging in via `/api/login`, include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your-token>
+```
+
+### Adding New Documentation
+
+API documentation uses PHP 8 Attributes in controller files. Example:
+
+```php
+use OpenApi\Attributes as OA;
+
+#[OA\Get(
+    path: '/api/example',
+    summary: 'Example endpoint',
+    tags: ['Example'],
+    responses: [
+        new OA\Response(response: 200, description: 'Success')
+    ]
+)]
+public function example() { ... }
+```
+
+The base OpenAPI configuration is defined in [Controller.php](app/Http/Controllers/Controller.php).
+
+## API Endpoints
+
+All API endpoints require authentication via Bearer token. Login first to obtain a token.
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/login` | Admin login, returns Bearer token |
+| POST | `/api/logout` | Logout (invalidate token) |
+
+### Products
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products` | List all products (with pagination) |
+| GET | `/api/products?status=1` | Filter by status (1=enabled, 0=disabled) |
+| GET | `/api/products?category_id=1` | Filter by category |
+| GET | `/api/products?per_page=25` | Set pagination size |
+| GET | `/api/products/{id}` | Get single product |
+| POST | `/api/products` | Create new product |
+| PUT | `/api/products/{id}` | Update product |
+| DELETE | `/api/products/{id}` | Delete product (soft delete) |
+| POST | `/api/products/bulk-delete` | Bulk delete products |
+| GET | `/api/products/export` | Export products to Excel |
+
+### Categories
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/categories` | List all categories |
+
+### Request/Response Examples
+
+**Create Product Request:**
+```json
+{
+  "name": "Product Name",
+  "category_id": 1,
+  "description": "Product description",
+  "price": 9999,
+  "stock": 50,
+  "is_enabled": true
+}
+```
+
+**Product Response:**
+```json
+{
+  "data": {
+    "product": {
+      "id": 1,
+      "name": "Product Name",
+      "category_id": 1,
+      "description": "Product description",
+      "price": 9999,
+      "stock": 50,
+      "is_enabled": true,
+      "category": {
+        "id": 1,
+        "name": "Electronics"
+      }
+    }
+  }
+}
+```
+
+**Bulk Delete Request:**
+```json
+{
+  "ids": [1, 2, 3]
+}
+```
+
+## Assumptions & Design Choices
+
+### Architecture
+- **MVC Pattern**: Laravel's standard MVC architecture is used for clean separation of concerns
+- **RESTful API**: All endpoints follow REST conventions with proper HTTP methods and status codes
+- **SPA Frontend**: Vue.js 3 with Vuetify for a modern, responsive admin dashboard
+
+### Database Design
+- **Soft Deletes**: Products use soft deletes to preserve data integrity and allow recovery
+- **Price in Cents**: Prices are stored as integers (cents) to avoid floating-point precision issues
+- **One-to-Many Relationship**: Categories have many products, products belong to one category
+
+### Authentication & Security
+- **Laravel Sanctum**: Token-based API authentication for stateless requests
+- **Admin Guard**: Separate admin authentication guard from regular users
+- **Form Request Validation**: All inputs are validated before processing
+
+### Frontend
+- **File-based Routing**: Using `unplugin-vue-router` for automatic route generation
+- **Vite Build**: Frontend is built and served from Laravel's public directory
+- **Relative API URLs**: API calls use `/api` prefix to avoid CORS issues in Docker
+
+### Performance
+- **Eager Loading**: Category relationship is eager loaded with products to prevent N+1 queries
+- **Pagination**: All list endpoints support pagination for large datasets
+- **Database Indexing**: Foreign keys are indexed for faster queries
+
+### Testing
+- **Feature Tests**: PHPUnit tests cover all CRUD operations and edge cases
+- **Factory Pattern**: Using Laravel factories for test data generation
+- **RefreshDatabase**: Each test runs with a fresh database state
+
+### Deployment
+- **Docker**: Multi-container setup with PHP-FPM, Nginx, MySQL, and Node.js
+- **Makefile**: Simplified commands for common operations
+- **Environment Variables**: All configuration via `.env` file
 
 ## Project Structure
 

@@ -1,4 +1,4 @@
-.PHONY: up down build install migrate seed fresh test shell logs frontend clear restart
+.PHONY: up down build install migrate seed fresh test shell logs frontend clear restart swagger
 
 # Start all containers
 up:
@@ -59,3 +59,7 @@ clear:
 	docker-compose exec app php artisan cache:clear
 	docker-compose exec app php artisan route:clear
 	docker-compose exec app php artisan view:clear
+
+# Generate Swagger documentation
+swagger:
+	docker-compose exec app php artisan l5-swagger:generate
