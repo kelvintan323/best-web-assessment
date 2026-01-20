@@ -19,7 +19,7 @@ A Laravel + Vue.js application with Docker support.
 ### Step 1: Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/kelvintan323/best-web-assessment.git
 cd best-web-assessment
 ```
 
