@@ -1,59 +1,182 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Best Web Assessment
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel + Vue.js application with Docker support.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend**: Laravel 12 (PHP 8.4)
+- **Frontend**: Vue.js 3 + Vuetify + Vite
+- **Database**: MySQL 8.0
+- **Server**: Nginx
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Prerequisites
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Docker](https://www.docker.com/get-started) installed
+- [Docker Compose](https://docs.docker.com/compose/install/) installed
 
-## Learning Laravel
+## Quick Start
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Step 1: Clone the Repository
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone <repository-url>
+cd best-web-assessment
+```
 
-## Laravel Sponsors
+### Step 2: Setup Environment File
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+cp .env.example .env
+```
 
-### Premium Partners
+The default configuration uses:
+- **Database**: `best_web`
+- **Username**: `root`
+- **Password**: (empty)
+- **Host**: `mysql` (Docker container name)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Step 3: Build Docker Containers
 
-## Contributing
+```bash
+make build
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Step 4: Start Containers
 
-## Code of Conduct
+```bash
+make up
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+This starts 4 containers:
 
-## Security Vulnerabilities
+| Container | Port | Description |
+|-----------|------|-------------|
+| `laravel-app` | 9000 (internal) | PHP-FPM application |
+| `laravel-nginx` | **8000** | Nginx web server |
+| `laravel-mysql` | **3306** | MySQL database |
+| `laravel-node` | - | Frontend build (runs once) |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Step 5: Install Dependencies & Setup Database
+
+```bash
+make install
+```
+
+This command will:
+1. Install Composer dependencies
+2. Generate application key
+3. Run database migrations
+4. Seed the database
+
+### Step 6: Access the Application
+
+Open your browser and visit:
+
+- **Application**: http://localhost:8000
+
+## Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `make up` | Start all containers |
+| `make down` | Stop all containers |
+| `make build` | Build containers (no cache) |
+| `make install` | Install dependencies and setup database |
+| `make migrate` | Run database migrations |
+| `make seed` | Run database seeders |
+| `make fresh` | Fresh migration with seeding |
+| `make frontend` | Rebuild frontend (clean install) |
+| `make shell` | Access app container bash |
+| `make logs` | View container logs |
+| `make clear` | Clear Laravel caches |
+| `make test` | Run tests |
+
+## Development Workflow
+
+### After Making Frontend Changes (Vue/JS/CSS)
+
+```bash
+make frontend
+```
+
+### After Making Backend Changes (PHP)
+
+Changes are reflected immediately - no action needed.
+
+### After Changing Nginx Config
+
+```bash
+docker-compose restart nginx
+```
+
+### After Changing Docker Config (Dockerfile/docker-compose.yml)
+
+```bash
+make down
+make build
+make up
+```
+
+## Troubleshooting
+
+### Permission Issues
+
+```bash
+docker-compose exec app chmod -R 775 storage bootstrap/cache
+```
+
+### Database Connection Refused
+
+Make sure your `.env` file has:
+```
+DB_HOST=mysql
+```
+**Not** `127.0.0.1` (that's for local development without Docker).
+
+### Clear All Caches
+
+```bash
+make clear
+```
+
+### Reset Database
+
+```bash
+make fresh
+```
+
+### Reset Everything (Nuclear Option)
+
+```bash
+make down
+docker volume rm best-web-assessment_mysql-data
+rm -rf frontend/node_modules
+make build
+make up
+make install
+```
+
+## Project Structure
+
+```
+.
+├── app/                    # Laravel application
+├── frontend/               # Vue.js frontend
+│   ├── src/
+│   │   ├── pages/         # Vue pages (file-based routing)
+│   │   ├── components/    # Vue components
+│   │   └── layouts/       # Layout components
+│   └── package.json
+├── public/                 # Public assets (frontend build output)
+├── docker/
+│   ├── nginx/default.conf # Nginx configuration
+│   └── php/local.ini      # PHP configuration
+├── docker-compose.yml      # Docker services
+├── Dockerfile             # PHP-FPM image
+├── Makefile               # Shortcut commands
+└── .env.example           # Environment template
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software.
