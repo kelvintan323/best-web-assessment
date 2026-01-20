@@ -89,6 +89,8 @@ Open your browser and visit:
 
 ![Dashboard Image](public/images/dashboard.png)
 
+![Product Detail Image](public/images/detail.png)
+
 ![Swagger API Image](public/images/swagger.png)
 
 ## Available Commands

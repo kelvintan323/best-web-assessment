@@ -102,7 +102,7 @@ const saveProduct = async () => {
 				isNewProduct ? 'Product created successfully' : 'Product updated successfully'
 			)
 			if (isNewProduct) {
-				router.push('/')
+				router.push({ name: 'products' })
 			} else {
 				product.value = response.data.product
 			}
@@ -116,7 +116,7 @@ const saveProduct = async () => {
 }
 
 const goBack = () => {
-	router.push('/')
+	router.push({ name: 'products' })
 }
 
 onMounted(() => {
@@ -139,6 +139,14 @@ onMounted(() => {
 					</VBtn>
 					<span>{{ isNewProduct ? 'Create Product' : 'Edit Product' }}</span>
 				</div>
+			</template>
+
+			<template #append>
+				<VSwitch
+					v-model="form.is_enabled"
+					:label="capitalizedLabel(form.is_enabled)"
+					color="primary"
+					hide-details />
 			</template>
 
 			<VCardText v-if="!loading">
@@ -171,7 +179,7 @@ onMounted(() => {
 						</VCol>
 						<VCol
 							cols="12"
-							md="4">
+							md="6">
 							<VTextField
 								v-model.number="form.price"
 								label="Price"
@@ -181,20 +189,12 @@ onMounted(() => {
 						</VCol>
 						<VCol
 							cols="12"
-							md="4">
+							md="6">
 							<VTextField
 								v-model.number="form.stock"
 								label="Stock"
 								type="number"
 								:rules="rules.stock" />
-						</VCol>
-						<VCol
-							cols="12"
-							md="4">
-							<VSwitch
-								v-model="form.is_enabled"
-								:label="capitalizedLabel(form.is_enabled)"
-								color="primary" />
 						</VCol>
 					</VRow>
 				</VForm>
