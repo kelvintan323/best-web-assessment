@@ -48,6 +48,8 @@ make build
 make up
 ```
 
+![Docker Example Image](public/images/docker.png)
+
 This starts 4 containers:
 
 | Container | Port | Description |
@@ -74,7 +76,12 @@ This command will:
 Open your browser and visit:
 
 - **Application**: http://localhost:8000
+
+![Login Image](public/images/login.png)
+
 - **Swagger API Docs**: http://localhost:8000/api/documentation
+
+![Login Image](public/images/swagger.png)
 
 ## Available Commands
 
