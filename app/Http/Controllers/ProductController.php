@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ProductExport;
+use App\Http\Requests\BulkDeleteProductRequest;
+use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -44,18 +46,9 @@ class ProductController extends Controller
         return $this->response(['product' => $product->load('category')]);
     }
 
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'price' => 'required|integer|min:0',
-            'stock' => 'required|integer|min:0',
-            'is_enabled' => 'boolean',
-        ]);
-
-        $product = Product::create($validated);
+        $product = Product::create($request->validated());
 
         return $this->response(
             data: ['product' => $product->load('category')],
@@ -63,18 +56,9 @@ class ProductController extends Controller
         );
     }
 
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'price' => 'required|integer|min:0',
-            'stock' => 'required|integer|min:0',
-            'is_enabled' => 'boolean',
-        ]);
-
-        $product->update($validated);
+        $product->update($request->validated());
 
         return $this->response(['product' => $product->load('category')]);
     }
@@ -86,14 +70,9 @@ class ProductController extends Controller
         return $this->response(['message' => 'Product deleted successfully']);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(BulkDeleteProductRequest $request)
     {
-        $validated = $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:products,id',
-        ]);
-
-        Product::whereIn('id', $validated['ids'])->delete();
+        Product::whereIn('id', $request->validated()['ids'])->delete();
 
         return $this->response(['message' => 'Products deleted successfully']);
     }
