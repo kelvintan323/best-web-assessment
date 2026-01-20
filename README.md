@@ -8,7 +8,9 @@ A Laravel + Vue.js application with Docker support.
 - **Frontend**: Vue.js 3 + Vuetify + Vite
 - **Database**: MySQL 8.0
 - **Server**: Nginx
+- **Authentication**: Laravel Sanctum (Token-based)
 - **API Docs**: L5-Swagger (OpenAPI 3.0)
+- **Excel Export**: maatwebsite/excel
 
 ## Prerequisites
 
@@ -76,14 +78,16 @@ This command will:
 Open your browser and visit:
 
 - **Application**: http://localhost:8000
-- **Log in credentials can refer admin seeder file**: email: admin@test.com, password: 12345678
+- **Swagger API Docs**: http://localhost:8000/api/documentation
+
+**Default Admin Credentials:**
+| Email | Password |
+|-------|----------|
+| admin@test.com | 12345678 |
 
 ![Login Image](public/images/login.png)
 
-
-- **Swagger API Docs**: http://localhost:8000/api/documentation
-
-![Swagger Api Image](public/images/swagger.png)
+![Swagger API Image](public/images/swagger.png)
 
 ## Available Commands
 
@@ -234,6 +238,7 @@ All API endpoints require authentication via Bearer token. Login first to obtain
 |--------|----------|-------------|
 | POST | `/api/login` | Admin login, returns Bearer token |
 | POST | `/api/logout` | Logout (invalidate token) |
+| GET | `/api/me` | Get current authenticated user |
 
 ### Products
 
@@ -313,7 +318,7 @@ All API endpoints require authentication via Bearer token. Login first to obtain
 ### Authentication & Security
 - **Laravel Sanctum**: Token-based API authentication for stateless requests
 - **Admin Guard**: Separate admin authentication guard from regular users
-- **Form Request Validation**: All inputs are validated before processing
+- **Form Request Validation**: All inputs are validated using dedicated Form Request classes (`ProductRequest`, `BulkDeleteProductRequest`) with custom error messages
 
 ### Frontend
 - **File-based Routing**: Using `unplugin-vue-router` for automatic route generation
@@ -334,6 +339,32 @@ All API endpoints require authentication via Bearer token. Login first to obtain
 - **Docker**: Multi-container setup with PHP-FPM, Nginx, MySQL, and Node.js
 - **Makefile**: Simplified commands for common operations
 - **Environment Variables**: All configuration via `.env` file
+
+## Testing
+
+Run the test suite:
+
+```bash
+make test
+# or
+docker-compose exec app php artisan test
+```
+
+### Test Coverage
+
+The test suite includes **17 feature tests** covering:
+
+| Test | Description |
+|------|-------------|
+| List products | Pagination, filtering by status/category |
+| Show product | Single product retrieval, 404 handling |
+| Create product | Validation, required fields, category existence |
+| Update product | Field updates, validation |
+| Delete product | Soft delete verification |
+| Bulk delete | Multiple product deletion, ID validation |
+| Export | Excel file generation |
+| Authentication | Unauthenticated access rejection |
+| Relationships | Category data included in responses |
 
 ## Project Structure
 
