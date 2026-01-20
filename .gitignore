@@ -22,6 +22,7 @@
 /storage/pail
 /vendor
 /frontend/node_modules
+/frontend/package-lock.json
 composer.lock
 Homestead.json
 Homestead.yaml

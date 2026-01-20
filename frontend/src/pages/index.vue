@@ -2,7 +2,9 @@
 import request from '@/utils/request'
 import { useSnackbarStore } from '@/stores/snackbar'
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const snackbar = useSnackbarStore()
 
 const products = ref([])
@@ -16,6 +18,7 @@ let requestId = 0
 // Filters
 const filterStatus = ref(null)
 const filterCategory = ref(null)
+const categories = ref([])
 const statusOptions = [
 	{ title: 'All', value: null },
 	{ title: 'Active', value: 1 },
@@ -31,22 +34,6 @@ const headers = [
 	{ title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Dialog state
-const dialog = ref(false)
-const dialogLoading = ref(false)
-const isEdit = ref(false)
-const editingId = ref(null)
-const categories = ref([])
-const formRef = ref(null)
-const form = ref({
-	name: '',
-	category_id: null,
-	description: '',
-	price: null,
-	stock: null,
-	is_enabled: true,
-})
-
 // Delete dialog
 const deleteDialog = ref(false)
 const deleteLoading = ref(false)
@@ -56,19 +43,6 @@ const deletingProduct = ref(null)
 const selected = ref([])
 const bulkDeleteDialog = ref(false)
 const bulkDeleteLoading = ref(false)
-
-const rules = {
-	name: [(v) => !!v || 'Name is required'],
-	category_id: [(v) => !!v || 'Category is required'],
-	price: [
-		(v) => (v !== null && v !== '') || 'Price is required',
-		(v) => v >= 0 || 'Price must be positive',
-	],
-	stock: [
-		(v) => (v !== null && v !== '') || 'Stock is required',
-		(v) => v >= 0 || 'Stock must be positive',
-	],
-}
 
 const fetchProducts = () => {
 	loading.value = true
@@ -118,10 +92,6 @@ const formatPrice = (price) => {
 	}).format(price / 100)
 }
 
-const capitalizedLabel = (value) => {
-	return value ? 'Enabled' : 'Disabled'
-}
-
 const onUpdateOptions = (options) => {
 	currentPage.value = options.page
 	itemsPerPage.value = options.itemsPerPage
@@ -134,60 +104,12 @@ const applyFilters = () => {
 	fetchProducts()
 }
 
-const openCreateDialog = () => {
-	isEdit.value = false
-	editingId.value = null
-	form.value = {
-		name: '',
-		category_id: null,
-		description: '',
-		price: null,
-		stock: null,
-		is_enabled: true,
-	}
-	dialog.value = true
+const goToCreate = () => {
+	router.push('/products/new')
 }
 
-const openEditDialog = (product) => {
-	isEdit.value = true
-	editingId.value = product.id
-	form.value = {
-		name: product.name,
-		category_id: product.category_id,
-		description: product.description || '',
-		price: product.price / 100,
-		stock: product.stock,
-		is_enabled: Boolean(product.is_enabled),
-	}
-	dialog.value = true
-}
-
-const saveProduct = async () => {
-	const { valid } = await formRef.value.validate()
-	if (!valid) return
-
-	dialogLoading.value = true
-	const payload = {
-		...form.value,
-		price: Math.round(form.value.price * 100),
-	}
-
-	const apiCall = isEdit.value
-		? request.put(`/products/${editingId.value}`, { body: payload })
-		: request.post('/products', { body: payload })
-
-	apiCall
-		.then(() => {
-			dialog.value = false
-			if (!isEdit.value) currentPage.value = 1
-			fetchProducts()
-			snackbar.showSnackbar(
-				isEdit.value ? 'Product updated successfully' : 'Product created successfully'
-			)
-		})
-		.finally(() => {
-			dialogLoading.value = false
-		})
+const goToEdit = (product) => {
+	router.push(`/products/${product.id}`)
 }
 
 const openDeleteDialog = (product) => {
@@ -287,7 +209,7 @@ onMounted(() => {
 				</VBtn>
 				<VBtn
 					color="primary"
-					@click="openCreateDialog">
+					@click="goToCreate">
 					Create Product
 				</VBtn>
 			</template>
@@ -363,7 +285,7 @@ onMounted(() => {
 						size="small"
 						variant="text"
 						color="primary"
-						@click="openEditDialog(item)">
+						@click="goToEdit(item)">
 						<VIcon icon="tabler-edit" />
 					</VBtn>
 					<VBtn
@@ -377,77 +299,6 @@ onMounted(() => {
 				</template>
 			</VDataTableServer>
 		</div>
-
-		<!-- Create/Edit Product Dialog -->
-		<VDialog
-			v-model="dialog"
-			max-width="500">
-			<VCard :title="isEdit ? 'Edit Product' : 'Create Product'">
-				<VCardText>
-					<VForm ref="formRef">
-						<VRow>
-							<VCol cols="12">
-								<VTextField
-									v-model="form.name"
-									label="Name"
-									:rules="rules.name" />
-							</VCol>
-							<VCol cols="12">
-								<VSelect
-									v-model="form.category_id"
-									label="Category"
-									:items="categories"
-									item-title="name"
-									item-value="id"
-									:rules="rules.category_id" />
-							</VCol>
-							<VCol cols="12">
-								<VTextarea
-									v-model="form.description"
-									label="Description"
-									rows="3" />
-							</VCol>
-							<VCol cols="6">
-								<VTextField
-									v-model.number="form.price"
-									label="Price"
-									type="number"
-									prefix="$"
-									:rules="rules.price" />
-							</VCol>
-							<VCol cols="6">
-								<VTextField
-									v-model.number="form.stock"
-									label="Stock"
-									type="number"
-									:rules="rules.stock" />
-							</VCol>
-
-							<VCol cols="12">
-								<VSwitch
-									v-model="form.is_enabled"
-									:label="capitalizedLabel(form.is_enabled)"
-									color="primary" />
-							</VCol>
-						</VRow>
-					</VForm>
-				</VCardText>
-				<VCardActions>
-					<VSpacer />
-					<VBtn
-						variant="text"
-						@click="dialog = false">
-						Cancel
-					</VBtn>
-					<VBtn
-						color="primary"
-						:loading="dialogLoading"
-						@click="saveProduct">
-						{{ isEdit ? 'Update' : 'Create' }}
-					</VBtn>
-				</VCardActions>
-			</VCard>
-		</VDialog>
 
 		<!-- Delete Confirmation Dialog -->
 		<VDialog

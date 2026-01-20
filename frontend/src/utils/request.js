@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
 
-const BASE_URL = 'http://127.0.0.1:8000/api'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
 const DEFAULT_TIMEOUT = 10000 // 10 seconds
 
 const handleRequest = async (endpoint, config) => {

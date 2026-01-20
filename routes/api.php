@@ -22,5 +22,5 @@ Route::middleware(['auth:admin'])->group(function () {
     // product
     Route::get('products/export', [ProductController::class, 'export']);
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy']);
-    Route::resource('products', ProductController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('products', ProductController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
 });

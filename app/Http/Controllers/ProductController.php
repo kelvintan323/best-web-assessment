@@ -39,6 +39,11 @@ class ProductController extends Controller
         return $this->response(['products' => $products]);
     }
 
+    public function show(Product $product)
+    {
+        return $this->response(['product' => $product->load('category')]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
