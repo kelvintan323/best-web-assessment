@@ -95,19 +95,15 @@ Open your browser and visit:
 
 | Command | Description |
 |---------|-------------|
-| `make up` | Start all containers |
-| `make down` | Stop all containers |
-| `make build` | Build containers (no cache) |
-| `make install` | Install dependencies and setup database |
-| `make migrate` | Run database migrations |
-| `make seed` | Run database seeders |
-| `make fresh` | Fresh migration with seeding |
-| `make frontend` | Rebuild frontend (clean install) |
-| `make shell` | Access app container bash |
-| `make logs` | View container logs |
-| `make clear` | Clear Laravel caches |
+| `make up` | Start containers |
+| `make down` | Stop containers |
+| `make restart` | Full restart (down + up) |
+| `make backend` | Refresh backend (clear cache + regenerate swagger + restart PHP) |
+| `make frontend` | Rebuild frontend assets |
+| `make install` | First time setup (composer install + migrate + seed) |
 | `make test` | Run tests |
-| `make swagger` | Generate Swagger documentation |
+| `make shell` | Access container shell |
+| `make logs` | View logs |
 
 ## Development Workflow
 
@@ -119,20 +115,14 @@ make frontend
 
 ### After Making Backend Changes (PHP)
 
-Changes are reflected immediately - no action needed.
-
-### After Changing Nginx Config
-
 ```bash
-docker-compose restart nginx
+make backend
 ```
 
-### After Changing Docker Config (Dockerfile/docker-compose.yml)
+### Full Restart
 
 ```bash
-make down
-make build
-make up
+make restart
 ```
 
 ## Troubleshooting
@@ -154,13 +144,7 @@ DB_HOST=mysql
 ### Clear All Caches
 
 ```bash
-make clear
-```
-
-### Reset Database
-
-```bash
-make fresh
+make backend
 ```
 
 ### Reset Everything (Nuclear Option)
@@ -169,7 +153,7 @@ make fresh
 make down
 docker volume rm best-web-assessment_mysql-data
 rm -rf frontend/node_modules
-make build
+docker-compose build --no-cache
 make up
 make install
 ```
@@ -187,7 +171,7 @@ This project uses [L5-Swagger](https://github.com/DarkaOnLine/L5-Swagger) with *
 After modifying API endpoints or adding new ones:
 
 ```bash
-make swagger
+make backend
 # or
 docker-compose exec app php artisan l5-swagger:generate
 ```
