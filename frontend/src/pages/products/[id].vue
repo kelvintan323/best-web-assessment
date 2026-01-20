@@ -102,7 +102,7 @@ const saveProduct = async () => {
 				isNewProduct ? 'Product created successfully' : 'Product updated successfully'
 			)
 			if (isNewProduct) {
-				router.push(`/products/${response.data.product.id}`)
+				router.push('/')
 			} else {
 				product.value = response.data.product
 			}
