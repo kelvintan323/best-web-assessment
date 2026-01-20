@@ -7,6 +7,7 @@ import {
   useConfigStore,
 } from '@core/stores/config'
 import { hexToRgb } from '@core/utils/colorConverter'
+import { useSnackbarStore } from '@/stores/snackbar'
 
 const { global } = useTheme()
 
@@ -15,6 +16,7 @@ initCore()
 initConfigStore()
 
 const configStore = useConfigStore()
+const snackbarStore = useSnackbarStore()
 </script>
 
 <template>
@@ -24,6 +26,20 @@ const configStore = useConfigStore()
       <RouterView />
 
       <ScrollToTop />
+
+      <VSnackbar
+        v-model="snackbarStore.show"
+        :color="snackbarStore.color"
+        :timeout="3000"
+        location="top end"
+      >
+        {{ snackbarStore.message }}
+        <template #actions>
+          <VBtn variant="text" @click="snackbarStore.hideSnackbar()">
+            Close
+          </VBtn>
+        </template>
+      </VSnackbar>
     </VApp>
   </VLocaleProvider>
 </template>

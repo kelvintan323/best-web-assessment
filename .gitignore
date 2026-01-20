@@ -1,5 +1,6 @@
 *.log
 .DS_Store
+.claude/
 .env
 .env.backup
 .env.production
@@ -20,6 +21,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/frontend/node_modules
 composer.lock
 Homestead.json
 Homestead.yaml
