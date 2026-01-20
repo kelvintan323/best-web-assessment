@@ -46,7 +46,8 @@ logs:
 # Rebuild frontend (clean install)
 frontend:
 	rm -rf frontend/node_modules
-	docker-compose restart node
+	docker-compose rm -f node
+	docker-compose up node
 
 # Clear Laravel cache
 clear:
