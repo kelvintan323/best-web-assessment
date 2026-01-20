@@ -57,7 +57,10 @@ class ProductController extends Controller
 
         $product = Product::create($validated);
 
-        return $this->response(['product' => $product->load('category')], 201);
+        return $this->response(
+            data: ['product' => $product->load('category')],
+            statusCode: 201
+        );
     }
 
     public function update(Request $request, Product $product)

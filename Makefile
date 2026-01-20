@@ -1,4 +1,4 @@
-.PHONY: up down build install migrate seed fresh test shell logs frontend clear
+.PHONY: up down build install migrate seed fresh test shell logs frontend clear restart
 
 # Start all containers
 up:
@@ -7,6 +7,10 @@ up:
 # Stop all containers
 down:
 	docker-compose down
+
+# Restart all containers
+restart:
+	docker-compose restart
 
 # Build containers
 build:
