@@ -1,4 +1,4 @@
-.PHONY: up down build install migrate seed fresh test shell logs frontend clear restart swagger
+.PHONY: up down build install migrate seed fresh test shell logs frontend frontend-clean rebuild clear restart swagger
 
 # Start all containers
 up:
@@ -47,8 +47,12 @@ shell:
 logs:
 	docker-compose logs -f
 
-# Rebuild frontend (clean install)
+# Quick frontend rebuild (no npm install)
 frontend:
+	docker-compose run --rm node sh -c "npm run build"
+
+# Full frontend rebuild (clean install)
+frontend-clean:
 	rm -rf frontend/node_modules
 	docker-compose rm -f node
 	docker-compose up node

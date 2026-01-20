@@ -50,6 +50,7 @@ services:
         volumes:
             - ./frontend:/var/www/frontend
             - ./public:/var/www/public
+            - ./resources:/var/www/resources
         command: sh -c "npm install && npm run build"
         networks:
             - app-network

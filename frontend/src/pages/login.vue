@@ -130,9 +130,9 @@ const login = async () => {
 								<AppTextField
 									v-model="form.email"
 									autofocus
-									label="Email or Username"
+									label="Email"
 									type="email"
-									placeholder="johndoe@email.com" />
+									placeholder="admin@test.com" />
 							</VCol>
 
 							<!-- password -->
