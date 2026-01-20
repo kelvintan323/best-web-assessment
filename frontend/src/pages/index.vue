@@ -1,25 +1,500 @@
-<template>
-  <div>
-    <VCard
-      class="mb-6"
-      title="Kick start your project 🚀"
-    >
-      <VCardText>All the best for your new project.</VCardText>
-      <VCardText>
-        Please make sure to read our <a
-          href="https://demos.pixinvent.com/vuexy-vuejs-admin-template/documentation/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-decoration-none"
-        >
-          Template Documentation
-        </a> to understand where to go from here and how to use our template.
-      </VCardText>
-    </VCard>
+<script setup>
+import request from '@/utils/request'
+import { useSnackbarStore } from '@/stores/snackbar'
+import { ref, onMounted } from 'vue'
 
-    <VCard title="Want to integrate JWT? 🔒">
-      <VCardText>We carefully crafted JWT flow so you can implement JWT with ease and with minimum efforts.</VCardText>
-      <VCardText>Please read our  JWT Documentation to get more out of JWT authentication.</VCardText>
-    </VCard>
-  </div>
+const snackbar = useSnackbarStore()
+
+const products = ref([])
+const loading = ref(false)
+const totalItems = ref(0)
+const itemsPerPage = ref(10)
+const currentPage = ref(1)
+const sortBy = ref([])
+let requestId = 0
+
+// Filters
+const filterStatus = ref(null)
+const filterCategory = ref(null)
+const statusOptions = [
+	{ title: 'All', value: null },
+	{ title: 'Active', value: 1 },
+	{ title: 'Inactive', value: 0 },
+]
+
+const headers = [
+	{ title: 'Name', key: 'name' },
+	{ title: 'Category', key: 'category.name', sortable: false },
+	{ title: 'Price', key: 'price' },
+	{ title: 'Stock', key: 'stock' },
+	{ title: 'Status', key: 'is_enabled' },
+	{ title: 'Actions', key: 'actions', sortable: false },
+]
+
+// Dialog state
+const dialog = ref(false)
+const dialogLoading = ref(false)
+const isEdit = ref(false)
+const editingId = ref(null)
+const categories = ref([])
+const formRef = ref(null)
+const form = ref({
+	name: '',
+	category_id: null,
+	description: '',
+	price: null,
+	stock: null,
+	is_enabled: true,
+})
+
+// Delete dialog
+const deleteDialog = ref(false)
+const deleteLoading = ref(false)
+const deletingProduct = ref(null)
+
+// Bulk delete
+const selected = ref([])
+const bulkDeleteDialog = ref(false)
+const bulkDeleteLoading = ref(false)
+
+const rules = {
+	name: [(v) => !!v || 'Name is required'],
+	category_id: [(v) => !!v || 'Category is required'],
+	price: [
+		(v) => (v !== null && v !== '') || 'Price is required',
+		(v) => v >= 0 || 'Price must be positive',
+	],
+	stock: [
+		(v) => (v !== null && v !== '') || 'Stock is required',
+		(v) => v >= 0 || 'Stock must be positive',
+	],
+}
+
+const fetchProducts = () => {
+	loading.value = true
+	const currentRequestId = ++requestId
+
+	const params = new URLSearchParams({
+		page: currentPage.value,
+		per_page: itemsPerPage.value,
+	})
+
+	if (sortBy.value.length > 0) {
+		params.append('sort_key', sortBy.value[0].key)
+		params.append('sort_order', sortBy.value[0].order)
+	}
+
+	if (filterStatus.value !== null) {
+		params.append('status', filterStatus.value)
+	}
+
+	if (filterCategory.value !== null) {
+		params.append('category_id', filterCategory.value)
+	}
+
+	request
+		.get(`/products?${params.toString()}`)
+		.then((response) => {
+			if (currentRequestId !== requestId) return
+			products.value = response.data.products.data
+			totalItems.value = response.data.products.total
+		})
+		.finally(() => {
+			if (currentRequestId !== requestId) return
+			loading.value = false
+		})
+}
+
+const fetchCategories = () => {
+	request.get('/categories').then((response) => {
+		categories.value = response.data.categories
+	})
+}
+
+const formatPrice = (price) => {
+	return new Intl.NumberFormat('en-US', {
+		style: 'currency',
+		currency: 'USD',
+	}).format(price / 100)
+}
+
+const capitalizedLabel = (value) => {
+	return value ? 'Enabled' : 'Disabled'
+}
+
+const onUpdateOptions = (options) => {
+	currentPage.value = options.page
+	itemsPerPage.value = options.itemsPerPage
+	sortBy.value = options.sortBy
+	fetchProducts()
+}
+
+const applyFilters = () => {
+	currentPage.value = 1
+	fetchProducts()
+}
+
+const openCreateDialog = () => {
+	isEdit.value = false
+	editingId.value = null
+	form.value = {
+		name: '',
+		category_id: null,
+		description: '',
+		price: null,
+		stock: null,
+		is_enabled: true,
+	}
+	dialog.value = true
+}
+
+const openEditDialog = (product) => {
+	isEdit.value = true
+	editingId.value = product.id
+	form.value = {
+		name: product.name,
+		category_id: product.category_id,
+		description: product.description || '',
+		price: product.price / 100,
+		stock: product.stock,
+		is_enabled: Boolean(product.is_enabled),
+	}
+	dialog.value = true
+}
+
+const saveProduct = async () => {
+	const { valid } = await formRef.value.validate()
+	if (!valid) return
+
+	dialogLoading.value = true
+	const payload = {
+		...form.value,
+		price: Math.round(form.value.price * 100),
+	}
+
+	const apiCall = isEdit.value
+		? request.put(`/products/${editingId.value}`, { body: payload })
+		: request.post('/products', { body: payload })
+
+	apiCall
+		.then(() => {
+			dialog.value = false
+			if (!isEdit.value) currentPage.value = 1
+			fetchProducts()
+			snackbar.showSnackbar(
+				isEdit.value ? 'Product updated successfully' : 'Product created successfully'
+			)
+		})
+		.finally(() => {
+			dialogLoading.value = false
+		})
+}
+
+const openDeleteDialog = (product) => {
+	deletingProduct.value = product
+	deleteDialog.value = true
+}
+
+const deleteProduct = () => {
+	deleteLoading.value = true
+	request
+		.delete(`/products/${deletingProduct.value.id}`)
+		.then(() => {
+			deleteDialog.value = false
+			fetchProducts()
+			snackbar.showSnackbar('Product deleted successfully')
+		})
+		.finally(() => {
+			deleteLoading.value = false
+		})
+}
+
+const openBulkDeleteDialog = () => {
+	bulkDeleteDialog.value = true
+}
+
+const bulkDeleteProducts = () => {
+	bulkDeleteLoading.value = true
+	request
+		.post('/products/bulk-delete', { body: { ids: selected.value } })
+		.then(() => {
+			bulkDeleteDialog.value = false
+			selected.value = []
+			fetchProducts()
+			snackbar.showSnackbar('Products deleted successfully')
+		})
+		.finally(() => {
+			bulkDeleteLoading.value = false
+		})
+}
+
+const exportLoading = ref(false)
+
+const exportProducts = async () => {
+	const params = new URLSearchParams()
+
+	if (filterStatus.value !== null) {
+		params.append('status', filterStatus.value)
+	}
+
+	if (filterCategory.value !== null) {
+		params.append('category_id', filterCategory.value)
+	}
+
+	exportLoading.value = true
+
+	try {
+		const blob = await request.getBlob(`/products/export?${params.toString()}`)
+		const url = URL.createObjectURL(blob)
+		const link = document.createElement('a')
+		link.href = url
+		link.download = `products_${new Date().toISOString().slice(0, 10)}.xlsx`
+		document.body.appendChild(link)
+		link.click()
+		document.body.removeChild(link)
+		URL.revokeObjectURL(url)
+
+		snackbar.showSnackbar('Products exported successfully')
+	} catch {
+		snackbar.showSnackbar('Failed to export products', 'error')
+	} finally {
+		exportLoading.value = false
+	}
+}
+
+onMounted(() => {
+	fetchCategories()
+})
+</script>
+
+<template>
+	<div>
+		<VCard title="Products">
+			<template #append>
+				<VBtn
+					v-if="selected.length > 0"
+					color="error"
+					class="me-2"
+					@click="openBulkDeleteDialog">
+					Delete Selected ({{ selected.length }})
+				</VBtn>
+				<VBtn
+					color="success"
+					class="me-2"
+					:loading="exportLoading"
+					@click="exportProducts">
+					Export
+				</VBtn>
+				<VBtn
+					color="primary"
+					@click="openCreateDialog">
+					Create Product
+				</VBtn>
+			</template>
+
+			<VCardText>
+				<VRow>
+					<VCol
+						cols="12"
+						md="3">
+						<VSelect
+							v-model="filterStatus"
+							label="Status"
+							:items="statusOptions"
+							item-title="title"
+							item-value="value"
+							clearable
+							@update:model-value="applyFilters" />
+					</VCol>
+					<VCol
+						cols="12"
+						md="3">
+						<VSelect
+							v-model="filterCategory"
+							label="Category"
+							:items="categories"
+							item-title="name"
+							item-value="id"
+							clearable
+							@update:model-value="applyFilters" />
+					</VCol>
+				</VRow>
+			</VCardText>
+		</VCard>
+		<div
+			class="position-relative d-flex flex-column"
+			style="min-height: 400px">
+			<VOverlay
+				:model-value="loading"
+				contained
+				persistent
+				class="align-center justify-center">
+				<VProgressCircular
+					indeterminate
+					size="64" />
+			</VOverlay>
+			<VDataTableServer
+				v-model="selected"
+				class="flex-grow-1 d-flex flex-column"
+				:headers="headers"
+				:items="products"
+				:items-length="totalItems"
+				:loading="false"
+				:items-per-page="itemsPerPage"
+				:items-per-page-options="[10, 25, 50, 100]"
+				:page="currentPage"
+				:sort-by="sortBy"
+				show-select
+				item-value="id"
+				@update:options="onUpdateOptions">
+				<template #item.price="{ item }">
+					{{ formatPrice(item.price) }}
+				</template>
+				<template #item.is_enabled="{ item }">
+					<VChip
+						:color="item.is_enabled ? 'success' : 'error'"
+						size="small">
+						{{ item.is_enabled ? 'Active' : 'Inactive' }}
+					</VChip>
+				</template>
+				<template #item.actions="{ item }">
+					<VBtn
+						icon
+						size="small"
+						variant="text"
+						color="primary"
+						@click="openEditDialog(item)">
+						<VIcon icon="tabler-edit" />
+					</VBtn>
+					<VBtn
+						icon
+						size="small"
+						variant="text"
+						color="error"
+						@click="openDeleteDialog(item)">
+						<VIcon icon="tabler-trash-off" />
+					</VBtn>
+				</template>
+			</VDataTableServer>
+		</div>
+
+		<!-- Create/Edit Product Dialog -->
+		<VDialog
+			v-model="dialog"
+			max-width="500">
+			<VCard :title="isEdit ? 'Edit Product' : 'Create Product'">
+				<VCardText>
+					<VForm ref="formRef">
+						<VRow>
+							<VCol cols="12">
+								<VTextField
+									v-model="form.name"
+									label="Name"
+									:rules="rules.name" />
+							</VCol>
+							<VCol cols="12">
+								<VSelect
+									v-model="form.category_id"
+									label="Category"
+									:items="categories"
+									item-title="name"
+									item-value="id"
+									:rules="rules.category_id" />
+							</VCol>
+							<VCol cols="12">
+								<VTextarea
+									v-model="form.description"
+									label="Description"
+									rows="3" />
+							</VCol>
+							<VCol cols="6">
+								<VTextField
+									v-model.number="form.price"
+									label="Price"
+									type="number"
+									prefix="$"
+									:rules="rules.price" />
+							</VCol>
+							<VCol cols="6">
+								<VTextField
+									v-model.number="form.stock"
+									label="Stock"
+									type="number"
+									:rules="rules.stock" />
+							</VCol>
+
+							<VCol cols="12">
+								<VSwitch
+									v-model="form.is_enabled"
+									:label="capitalizedLabel(form.is_enabled)"
+									color="primary" />
+							</VCol>
+						</VRow>
+					</VForm>
+				</VCardText>
+				<VCardActions>
+					<VSpacer />
+					<VBtn
+						variant="text"
+						@click="dialog = false">
+						Cancel
+					</VBtn>
+					<VBtn
+						color="primary"
+						:loading="dialogLoading"
+						@click="saveProduct">
+						{{ isEdit ? 'Update' : 'Create' }}
+					</VBtn>
+				</VCardActions>
+			</VCard>
+		</VDialog>
+
+		<!-- Delete Confirmation Dialog -->
+		<VDialog
+			v-model="deleteDialog"
+			max-width="400">
+			<VCard title="Delete Product">
+				<VCardText>Are you sure you want to delete "{{ deletingProduct?.name }}"?</VCardText>
+				<VCardActions>
+					<VSpacer />
+					<VBtn
+						variant="text"
+						@click="deleteDialog = false">
+						Cancel
+					</VBtn>
+					<VBtn
+						color="error"
+						:loading="deleteLoading"
+						@click="deleteProduct">
+						Delete
+					</VBtn>
+				</VCardActions>
+			</VCard>
+		</VDialog>
+
+		<!-- Bulk Delete Confirmation Dialog -->
+		<VDialog
+			v-model="bulkDeleteDialog"
+			max-width="400">
+			<VCard title="Delete Products">
+				<VCardText>
+					Are you sure you want to delete {{ selected.length }} selected products?
+				</VCardText>
+				<VCardActions>
+					<VSpacer />
+					<VBtn
+						variant="text"
+						@click="bulkDeleteDialog = false">
+						Cancel
+					</VBtn>
+					<VBtn
+						color="error"
+						:loading="bulkDeleteLoading"
+						@click="bulkDeleteProducts">
+						Delete
+					</VBtn>
+				</VCardActions>
+			</VCard>
+		</VDialog>
+	</div>
 </template>
