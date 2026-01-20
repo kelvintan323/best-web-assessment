@@ -76,12 +76,14 @@ This command will:
 Open your browser and visit:
 
 - **Application**: http://localhost:8000
+- **Log in credentials can refer admin seeder file**: email: admin@test.com, password: 12345678
 
 ![Login Image](public/images/login.png)
 
+
 - **Swagger API Docs**: http://localhost:8000/api/documentation
 
-![Login Image](public/images/swagger.png)
+![Swagger Api Image](public/images/swagger.png)
 
 ## Available Commands
 
