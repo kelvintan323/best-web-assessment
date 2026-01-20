@@ -87,6 +87,8 @@ Open your browser and visit:
 
 ![Login Image](public/images/login.png)
 
+![Dashboard Image](public/images/dashboard.png)
+
 ![Swagger API Image](public/images/swagger.png)
 
 ## Available Commands
