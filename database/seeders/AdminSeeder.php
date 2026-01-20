@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder
+class AdminSeeder extends Seeder
 {
     use WithoutModelEvents;
 
@@ -14,12 +15,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        $this->call([
-            AdminSeeder::class,
-            CategorySeeder::class,
-            ProductSeeder::class,
+        Admin::factory()->create([
+            'name' => 'Test Admin',
+            'email' => 'admin@test.com',
+            'password' => bcrypt(12345678),
         ]);
     }
 }
