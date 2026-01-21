@@ -21,15 +21,6 @@ class ProductTest extends TestCase
         parent::setUp();
 
         $this->admin = Admin::factory()->create();
-        $this->token = $this->admin->createToken('test-token')->plainTextToken;
-    }
-
-    protected function authHeaders(): array
-    {
-        return [
-            'Authorization' => 'Bearer ' . $this->token,
-            'Accept' => 'application/json',
-        ];
     }
 
     public function test_can_list_products(): void
@@ -37,7 +28,9 @@ class ProductTest extends TestCase
         $category = Category::factory()->create();
         Product::factory()->count(5)->create(['category_id' => $category->id]);
 
-        $response = $this->getJson('/api/products', $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -56,7 +49,9 @@ class ProductTest extends TestCase
         $category = Category::factory()->create();
         Product::factory()->count(15)->create(['category_id' => $category->id]);
 
-        $response = $this->getJson('/api/products?per_page=10', $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products?per_page=10');
 
         $response->assertStatus(200);
         $this->assertCount(10, $response->json('data.products.data'));
@@ -68,7 +63,9 @@ class ProductTest extends TestCase
         Product::factory()->count(3)->create(['category_id' => $category->id, 'is_enabled' => true]);
         Product::factory()->count(2)->create(['category_id' => $category->id, 'is_enabled' => false]);
 
-        $response = $this->getJson('/api/products?status=1', $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products?status=1');
 
         $response->assertStatus(200);
         $products = $response->json('data.products.data');
@@ -84,7 +81,9 @@ class ProductTest extends TestCase
         Product::factory()->count(3)->create(['category_id' => $category1->id]);
         Product::factory()->count(2)->create(['category_id' => $category2->id]);
 
-        $response = $this->getJson('/api/products?category_id=' . $category1->id, $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products?category_id=' . $category1->id);
 
         $response->assertStatus(200);
         $products = $response->json('data.products.data');
@@ -98,7 +97,9 @@ class ProductTest extends TestCase
         $category = Category::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id]);
 
-        $response = $this->getJson('/api/products/' . $product->id, $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products/' . $product->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.product.id', $product->id)
@@ -107,7 +108,9 @@ class ProductTest extends TestCase
 
     public function test_show_returns_404_for_nonexistent_product(): void
     {
-        $response = $this->getJson('/api/products/99999', $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products/99999');
 
         $response->assertStatus(404);
     }
@@ -125,7 +128,9 @@ class ProductTest extends TestCase
             'is_enabled' => true,
         ];
 
-        $response = $this->postJson('/api/products', $productData, $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->postJson('/api/products', $productData);
 
         $response->assertStatus(201)
             ->assertJsonPath('data.product.name', 'Test Product')
@@ -136,7 +141,9 @@ class ProductTest extends TestCase
 
     public function test_create_product_validates_required_fields(): void
     {
-        $response = $this->postJson('/api/products', [], $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->postJson('/api/products', []);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'category_id', 'price', 'stock']);
@@ -151,7 +158,9 @@ class ProductTest extends TestCase
             'stock' => 50,
         ];
 
-        $response = $this->postJson('/api/products', $productData, $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->postJson('/api/products', $productData);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['category_id']);
@@ -171,7 +180,9 @@ class ProductTest extends TestCase
             'is_enabled' => false,
         ];
 
-        $response = $this->putJson('/api/products/' . $product->id, $updateData, $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->putJson('/api/products/' . $product->id, $updateData);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.product.name', 'Updated Product Name')
@@ -185,7 +196,9 @@ class ProductTest extends TestCase
         $category = Category::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id]);
 
-        $response = $this->deleteJson('/api/products/' . $product->id, [], $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->deleteJson('/api/products/' . $product->id, []);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.message', 'Product deleted successfully');
@@ -199,7 +212,9 @@ class ProductTest extends TestCase
         $products = Product::factory()->count(3)->create(['category_id' => $category->id]);
         $ids = $products->pluck('id')->toArray();
 
-        $response = $this->postJson('/api/products/bulk-delete', ['ids' => $ids], $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->postJson('/api/products/bulk-delete', ['ids' => $ids]);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.message', 'Products deleted successfully');
@@ -211,7 +226,9 @@ class ProductTest extends TestCase
 
     public function test_bulk_delete_validates_ids(): void
     {
-        $response = $this->postJson('/api/products/bulk-delete', ['ids' => [99999]], $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->postJson('/api/products/bulk-delete', ['ids' => [99999]]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['ids.0']);
@@ -229,7 +246,9 @@ class ProductTest extends TestCase
         $category = Category::factory()->create();
         Product::factory()->count(5)->create(['category_id' => $category->id]);
 
-        $response = $this->get('/api/products/export', $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->get('/api/products/export');
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -240,7 +259,9 @@ class ProductTest extends TestCase
         $category = Category::factory()->create(['name' => 'Electronics']);
         $product = Product::factory()->create(['category_id' => $category->id]);
 
-        $response = $this->getJson('/api/products/' . $product->id, $this->authHeaders());
+        $response = $this
+            ->actingAs($this->admin, 'admin')
+            ->getJson('/api/products/' . $product->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.product.category.id', $category->id)
