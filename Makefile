@@ -12,14 +12,14 @@ down:
 restart:
 	docker-compose down && docker-compose up -d
 
-# Refresh backend (clear cache + restart PHP)
+# Refresh backend (clear cache only, no restart needed)
 backend:
 	docker-compose exec app php artisan config:clear
 	docker-compose exec app php artisan cache:clear
 	docker-compose exec app php artisan route:clear
 	docker-compose exec app php artisan view:clear
-	docker-compose exec app php artisan l5-swagger:generate
-	docker-compose restart app
+	docker-compose exec app php artisan l5-swagger:generate	
+	docker-compose restart nginx
 
 # Refresh frontend (rebuild assets)
 frontend:

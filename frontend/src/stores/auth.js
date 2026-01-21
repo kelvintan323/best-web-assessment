@@ -1,12 +1,10 @@
 import { defineStore } from 'pinia'
-
-const BASE_URL = 'http://127.0.0.1:8000/api'
+import request from '@/utils/request'
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
-    const token = computed(() => user.value?.bearerToken || null)
-    const isAuthenticated = computed(() => !!token.value)
+    const isAuthenticated = computed(() => !!user.value)
 
     const setUser = (newUser) => {
         user.value = newUser
@@ -17,42 +15,39 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await request.post('/logout')
+        } catch (error) {
+            // Ignore logout errors
+        }
         setUser(null)
     }
 
     const checkAuth = async () => {
-        if (!token.value) {
+        if (!user.value) {
             return false
         }
 
         try {
-            const response = await fetch(`${BASE_URL}/me`, {
-                headers: {
-                    Accept: 'application/json',
-                    Authorization: `Bearer ${token.value}`,
-                },
-            })
+            const response = await request.get('/me')
 
-            if (response.status === 401) {
-                logout()
-                return false
+            if (response?.data?.user) {
+                setUser(response.data.user)
+                return true
             }
 
-            if (response.ok) {
-                const data = await response.json()
-                setUser(data.data.user)
-            }
-
-            return true
+            setUser(null)
+            return false
         } catch (error) {
-            logout()
+            if (error.status === 401) {
+                setUser(null)
+            }
             return false
         }
     }
 
     return {
-        token,
         user,
         isAuthenticated,
         setUser,

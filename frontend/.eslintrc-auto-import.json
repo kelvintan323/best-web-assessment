@@ -360,6 +360,7 @@
     "watchTriggerable": true,
     "watchWithFilter": true,
     "whenever": true,
-    "request": true
+    "request": true,
+    "fetchCsrfCookie": true
   }
 }

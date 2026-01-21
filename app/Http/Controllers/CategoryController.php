@@ -23,18 +23,18 @@ class CategoryController extends Controller
                                 property: 'categories',
                                 type: 'array',
                                 items: new OA\Items(ref: '#/components/schemas/Category')
-                            )
-                        ], type: 'object')
+                            ),
+                        ], type: 'object'),
                     ]
                 )
             ),
-            new OA\Response(response: 401, description: 'Unauthenticated')
+            new OA\Response(response: 401, description: 'Unauthenticated'),
         ]
     )]
     public function index()
     {
         $categories = Category::orderBy('name')->get();
 
-        return $this->response(['categories' => $categories]);
+        return $this->response(['categories' => $categories, 'etes' => '123']);
     }
 }

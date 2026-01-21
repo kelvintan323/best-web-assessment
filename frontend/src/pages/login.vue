@@ -1,7 +1,7 @@
 <script setup>
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { useAuthStore } from '@/stores/auth'
-import request from '@/utils/request'
+import request, { fetchCsrfCookie } from '@/utils/request'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -45,6 +45,9 @@ const login = async () => {
 	errorMessage.value = ''
 
 	try {
+		// Fetch CSRF cookie before login
+		await fetchCsrfCookie()
+
 		const response = await request.post('/login', {
 			body: {
 				email: form.value.email,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Admin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use OpenApi\Attributes as OA;
 
@@ -36,10 +37,7 @@ class AuthController extends Controller
     )]
     public function me(Request $request)
     {
-        $user = $request->user();
-        $user->bearerToken = explode('Bearer ', $request->header('Authorization'))[1];
-
-        return $this->response(['user' => $user]);
+        return $this->response(['user' => $request->user()]);
     }
 
     #[OA\Post(
@@ -83,24 +81,17 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (!$user = Admin::where('email', $request->email)->first()) {
-            return $this->response(
-                message: 'Email not found. Please try again.',
-                statusCode: 400
-            );
-        }
-
-        $user->bearerToken = $user->createToken($user->email)->plainTextToken;
-
-        if (!Hash::check($request->password, $user->password)) {
+        if (!Auth::guard('admin')->attempt($request->only('email', 'password'))) {
             return $this->response(
                 message: 'Invalid email or password.',
                 statusCode: 400
             );
         }
 
+        $request->session()->regenerate();
+
         return $this->response([
-            'user' => $user,
+            'user' => Auth::guard('admin')->user(),
         ]);
     }
 
@@ -125,9 +116,10 @@ class AuthController extends Controller
     )]
     public function logout(Request $request)
     {
-        if ($request->user()) {
-            $request->user()->tokens()->delete();
-        }
+        Auth::guard('admin')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return $this->response(['message' => 'Logged out success']);
     }
