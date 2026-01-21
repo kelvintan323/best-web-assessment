@@ -8,14 +8,9 @@ A Laravel + Vue.js application with Docker support.
 - **Frontend**: Vue.js 3 + Vuetify + Vite
 - **Database**: MySQL 8.0
 - **Server**: Nginx
-- **Authentication**: Laravel Sanctum (Token-based)
+- **Authentication**: Laravel Sanctum (Cookie Session)
 - **API Docs**: L5-Swagger (OpenAPI 3.0)
 - **Excel Export**: maatwebsite/excel
-
-## Prerequisites
-
-- [Docker](https://www.docker.com/get-started) installed
-- [Docker Compose](https://docs.docker.com/compose/install/) installed
 
 ## Quick Start
 
@@ -26,31 +21,18 @@ git clone https://github.com/kelvintan323/best-web-assessment.git
 cd best-web-assessment
 ```
 
-### Step 2: Setup Environment File
+---
+
+### Step 2A: With Docker (Recommended)
+
+**Prerequisites:** [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/install/)
 
 ```bash
 cp .env.docker .env
-```
-
-The default configuration uses:
-- **Database**: `best_web`
-- **Username**: `root`
-- **Password**: (empty)
-- **Host**: `mysql` (Docker container name)
-
-### Step 3: Build Docker Containers
-
-```bash
 make build
-```
-
-### Step 4: Start Containers
-
-```bash
 make up
+make install
 ```
-
-![Docker Example Image](public/images/docker.png)
 
 This starts 4 containers:
 
@@ -61,19 +43,32 @@ This starts 4 containers:
 | `mysql-service` | **3306** | MySQL database |
 | `frontend` | - | Frontend build (only runs once) |
 
-### Step 5: Install Dependencies & Setup Database
+---
+
+### Step 2B: Without Docker (Local)
+
+**Prerequisites:** PHP 8.4+, Composer, Node.js 22+, MySQL 8.0
 
 ```bash
-make install
+cp .env.example .env
+composer install
+cd frontend && npm install && npm run build && cd ..
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan serve --host localhost --port 8000
 ```
 
-This command will:
-1. Install Composer dependencies
-2. Generate application key
-3. Run database migrations
-4. Seed the database
+Update `.env` if needed:
+```
+DB_HOST=127.0.0.1
+DB_DATABASE=best_web
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-### Step 6: Access the Application
+---
+
+### Step 3: Access the Application
 
 Open your browser and visit:
 
@@ -100,7 +95,7 @@ Open your browser and visit:
 | `make up` | Start containers |
 | `make down` | Stop containers |
 | `make restart` | Full restart (down + up) |
-| `make backend` | Refresh backend (clear cache + regenerate swagger + restart PHP) |
+| `make backend` | Refresh backend (clear cache + regenerate swagger + restart nginx) |
 | `make frontend` | Rebuild frontend assets |
 | `make install` | First time setup (composer install + migrate + seed) |
 | `make test` | Run tests |
@@ -190,11 +185,10 @@ The API is organized into the following tags:
 
 ### Authentication
 
-All protected endpoints use **Bearer Token** authentication. After logging in via `/api/login`, include the token in the `Authorization` header:
-
-```
-Authorization: Bearer <your-token>
-```
+All protected endpoints use **Cookie Session** authentication. The frontend handles this automatically by:
+1. Calling `/sanctum/csrf-cookie` before login to get CSRF token
+2. Including `credentials: 'include'` in all fetch requests
+3. Including `X-XSRF-TOKEN` header (from cookie) in requests
 
 ### Adding New Documentation
 
@@ -218,7 +212,7 @@ The base OpenAPI configuration is defined in [Controller.php](app/Http/Controlle
 
 ## API Endpoints
 
-All API endpoints require authentication via Bearer token. Login first to obtain a token.
+All API endpoints require authentication via Cookie Session. Login first to establish session.
 
 ### Authentication
 
@@ -304,7 +298,7 @@ All API endpoints require authentication via Bearer token. Login first to obtain
 - **One-to-Many Relationship**: Categories have many products, products belong to one category
 
 ### Authentication & Security
-- **Laravel Sanctum**: Token-based API authentication for stateless requests
+- **Laravel Sanctum**: Cookie-based session authentication for SPA
 - **Admin Guard**: Separate admin authentication guard from regular users
 - **Form Request Validation**: All inputs are validated using dedicated Form Request classes (`ProductRequest`, `BulkDeleteProductRequest`) with custom error messages
 
