@@ -35,6 +35,6 @@ class CategoryController extends Controller
     {
         $categories = Category::orderBy('name')->get();
 
-        return $this->response(['categories' => $categories, 'etes' => '123']);
+        return $this->response(['categories' => $categories]);
     }
 }
